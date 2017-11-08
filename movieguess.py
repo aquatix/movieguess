@@ -19,6 +19,15 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 
 
+def get_cast(movie_id):
+    url = 'https://api.themoviedb.org/3/movie/{}/credits?api_key={}'.format(movie_id, settings.TMDB_API)
+    result = requests.get(url)
+    if result.status_code == 200:
+        return result.json()['cast']
+    else:
+        return []
+
+
 @app.route('/')
 def index():
     return jsonify({'message': 'Please see https://github.com/aquatix/movieguess for documentation'})
@@ -38,6 +47,8 @@ def randommovie(appkey):
     else:
         movies = movielist.json()['results']
         result = movies[random.randint(0, len(movies))]
+        cast = get_cast(result['id'])
+        result['cast'] = cast
     return jsonify(result)
 
 

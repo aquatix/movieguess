@@ -29,7 +29,7 @@ def randommovie(appkey):
     if appkey != settings.APPKEY:
         abort(403)
 
-    page = random.randint(1, 2330)  # As of 20171108 there were 2330 pages for result vote_average.gte=6.0 and with_runtime.gte=65
+    page = random.randint(1, 1000)  # Maximum page is 1000
     url = 'https://api.themoviedb.org/3/discover/movie?api_key={}&include_adult=false&vote_average.gte={}&with_runtime.gte={}&page={}'.format(settings.TMDB_API, settings.VOTE_AVERAGE, settings.RUNTIME_MINIMUM, page)
     print(url)
     movielist = requests.get(url)

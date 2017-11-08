@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import random
 import sys
 
 from flask import Flask, abort, jsonify
@@ -25,22 +26,18 @@ def index():
 
 @app.route('/tmdb/<appkey>/random')
 def randommovie(appkey):
-    print(appkey)
-    print(settings.APPKEY)
     if appkey != settings.APPKEY:
         abort(403)
 
-    page = 4  # certified random
+    page = random.randint(1, 2330)  # As of 20171108 there were 2330 pages for result vote_average.gte=6.0 and with_runtime.gte=65
     url = 'https://api.themoviedb.org/3/discover/movie?api_key={}&include_adult=false&vote_average.gte={}&with_runtime.gte={}&page={}'.format(settings.TMDB_API, settings.VOTE_AVERAGE, settings.RUNTIME_MINIMUM, page)
     print(url)
     movielist = requests.get(url)
     if movielist.status_code != 200:
         result = {'message': 'Get an error {} from the TMDB backend'.format(movielist.status_code)}
     else:
-        print(movielist.json())
         movies = movielist.json()['results']
-        result = movies[4]  # Still random
-        #result = {'message': 'not implemented yet'}
+        result = movies[random.randint(0, len(movies))]
     return jsonify(result)
 
 

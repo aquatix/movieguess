@@ -19,11 +19,11 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 
 
-def get_cast(movie_id):
+def get_credits(movie_id):
     url = 'https://api.themoviedb.org/3/movie/{}/credits?api_key={}'.format(movie_id, settings.TMDB_API)
     result = requests.get(url)
     if result.status_code == 200:
-        return result.json()['cast']
+        return result.json()
     else:
         return []
 
@@ -47,8 +47,9 @@ def randommovie(appkey):
     else:
         movies = movielist.json()['results']
         result = movies[random.randint(0, len(movies))]
-        cast = get_cast(result['id'])
-        result['cast'] = cast
+        credits = get_credits(result['id'])
+        result['cast'] = credits['cast']
+        result['crew'] = credits['crew']
     return jsonify(result)
 
 

@@ -19,6 +19,29 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 
 
+class InvalidUsage(Exception):
+    status_code = 400
+
+    def __init__(self, message, status_code=None, payload=None):
+        Exception.__init__(self)
+        self.message = message
+        if status_code is not None:
+            self.status_code = status_code
+        self.payload = payload
+
+    def to_dict(self):
+        rv = dict(self.payload or ())
+        rv['message'] = self.message
+        return rv
+
+
+@app.errorhandler(InvalidUsage)
+def handle_invalid_usage(error):
+    response = jsonify(error.to_dict())
+    response.status_code = error.status_code
+    return response
+
+
 def get_credits(movie_id):
     url = 'https://api.themoviedb.org/3/movie/{}/credits?api_key={}'.format(movie_id, settings.TMDB_API)
     result = requests.get(url)
@@ -31,6 +54,23 @@ def get_credits(movie_id):
 @app.route('/')
 def index():
     return jsonify({'message': 'Please see https://github.com/aquatix/movieguess for documentation'})
+
+
+@app.route('/tmdb/<appkey>/movie/tmdb/<movie_id>')
+def tmdb_movie(appkey, movie_id):
+    if appkey != settings.APPKEY:
+        abort(403)
+
+    url = 'https://api.themoviedb.org/3/movie/{}?api_key={}'.format(movie_id, settings.TMDB_API)
+    result = requests.get(url)
+    if result.status_code == 200:
+        movie = result.json()
+        credits = get_credits(movie['id'])
+        movie['cast'] = credits['cast']
+        movie['crew'] = credits['crew']
+        return jsonify(movie)
+    else:
+        raise InvalidUsage('Movie not found in TMDB', status_code=410)
 
 
 @app.route('/tmdb/<appkey>/random')
